@@ -13,6 +13,6 @@ class SampleApp extends FacebookApp {
   }
 }
 
-$app = new SampleiApp('appid', 'secret');
+$app = new SampleApp('appid', 'secret');
 $app->forward($_POST['signed_request']);
 ?>
