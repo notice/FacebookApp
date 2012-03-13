@@ -51,11 +51,11 @@ class FacebookApp {
   }
 
   protected function forward_page() {
-   echo('<html><body><p>not yet liked.</body></html>');
+   echo('<html><body><p>not yet liked.</p></body></html>');
   }
 
   protected function forward_liked_page() {
-   echo('<html><body><p>liked.</body></html>');
+   echo('<html><body><p>liked.</p></body></html>');
   }
 
   public function forward($signed_request) {
