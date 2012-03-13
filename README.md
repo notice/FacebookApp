@@ -26,6 +26,16 @@ Facebookアプリを開発するためのフレームワークです。
     $app->forward($_POST['signed_request']);
     ?>
 
+パラメータの解説
+----------------
+
+    SampleApp(appid, secert)
+
++   `appid` :  
+   アプリケーションID 
+
++   `secret` :  
+   アプリケーションの秘訣 
 
 ライセンス
 ----------
