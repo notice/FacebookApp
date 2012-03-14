@@ -93,7 +93,7 @@ OAUTH認証ダイアログを呼び出して、必要ならユーザーから認
 +    `scope`
      ユーザーから得たい権限
 
-+    'canvas'
++    `canvas`
      認証後のリダイレクト先(アプリのネームスペース下:https://apps.facebook.com/app-namespace/)
 
 ライセンス
