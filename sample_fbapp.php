@@ -1,6 +1,8 @@
 <?php
 include "fbapp.php";
-
+/*
+  「いいね！」前と「いいね！」後のコンテンツを切り替えるアプリです。
+*/
 class SampleApp extends FacebookApp {
   public function forward_page() {
     // welcome.incの内容はご用意ください。
@@ -13,6 +15,6 @@ class SampleApp extends FacebookApp {
   }
 }
 
-$app = new SampleApp('appid', 'secret');
-$app->forward($_POST['signed_request']);
+$app = new SampleApp('your_appid', 'your_app_secret');
+$app->forward();
 ?>

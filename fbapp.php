@@ -20,18 +20,33 @@ class FacebookApp {
   // メンバー変数
   private $appid;  // アプリケーションID
   private $secret; // アプリケーションンの秘訣
+
   private $userid; // このアプリを利用するユーザーID
   private $admin;  // 利用ユーザーが管理者かどうか(true or false)
   private $user;   // このアプリを利用するユーザー情報（ID含む）
   private $page;   // アプリがインストールされたページ
 
-  // URL定数
-  private static $OAUTH_URL = 'https://www.facebook.com/dialog/oauth';
-  private static $TOKEN_URL = 'https://graph.facebook.com/oauth/access_token';
-  private static $ME_URL    = 'https://graph.facebook.com/me';
+  // 定数
+  private static $FB_PAGE_ID = 'fb_page_id';
+  private static $OAUTH_URL  = 'https://www.facebook.com/dialog/oauth';
+  private static $TOKEN_URL  = 'https://graph.facebook.com/oauth/access_token';
+  private static $ME_URL     = 'https://graph.facebook.com/me';
 
+  // getters
+  public function isadmin()  { return $this->admin; }
+  public function get_user() { return $this->user;  }
+  public function get_page() { return $this->page;  }
+
+  // utils.
   protected static function base64_url_decode($input) {
     return base64_decode(strtr($input, '-_', '+/'));
+  }
+
+  protected static function canvas_url($canvas, $page) {
+    if (!empty($page)) {
+      $canvas .= '?' . self::$FB_PAGE_ID . '=' . $page;
+    }
+    return urlencode($canvas);
   }
 
   protected function parse_signed_request($signed_request) {
@@ -69,8 +84,15 @@ class FacebookApp {
   }
 
   public function forward() {
-    $data = $this->parse_signed_request($_REQUEST['signed_request']);
-    if ($data['page']['liked']) {
+    if (!empty($_REQUEST['signed_request'])) {
+      // facebookからのファーストコールのとき
+      // このページの情報を取得する。
+      list($this->userid, $this->page, $this->admin) = $this->get_page_info($_REQUEST['signed_request']);
+      if (empty($this->page)) {
+        $this->forward_failed_oauth('get_page_info: failed request.');
+      }
+    }
+    if ($this->page['liked']) {
       $this->forward_liked_page();
     } else {
       $this->forward_page();
@@ -78,70 +100,75 @@ class FacebookApp {
   }
 
   public function oauth($scope, $canvas) {
-    // facebookからのコールかどうか。
-    if (!empty($_REQUEST['signed_request'])) {
-      $this->forward_failed_oauth('cannot be shown this page.');
-    }
     if (!empty($_REQUEST['error'])) {
       // OAuth認証からの戻りでエラーがあった。
+      // e.g.
+      // $_REQUEST['error'] = 'access_deied';
+      // $_REQUEST['error_reason'] = 'user_denied'
+      // $_REQUEST['error_description'] = 'The user denied your request.'
       $this->forward_failed_oauth($_REQUEST['error']);
     }
-    if (!empty($_REQUEST['code'])) {
-      // $codeがなければ、OAuth認証前なので、認証へ進める。
-      $this->forward_oauth($scope, $canvas);
-    }
-    // このページの情報を取得する。
-    list($this->userid, $this->page, $this->admin) = $this->get_pageinfo($_REQUEST['signed_request']);
-    if (empty($this->userid)) {
-      $this->forward_failed_oauth('failed request.');
+    // request parameters.
+    $code       = $_REQUEST['code'];
+    $fb_page_id = $_REQUEST[self::$FB_PAGE_ID];
+
+    if (empty($code)) {
+      // $codeがなければ、OAuth認証へ進める。
+      $this->forward_oauth($scope, $canvas, $fb_page_id);
     }
     // アクセストークンを取得する。
-    list($token, $result) = $this->get_access_token($canvas, $_REQUEST['code']);
+    list($token, $result) = $this->get_access_token($canvas, $fb_page_id, $code);
     if (empty($token)) {
-      $this->forward_failed_oauth($result->error->message);
+      $this->forward_failed_oauth('access_token: ' . $result->error->message);
     }
-    $this->user    = $this->get_user($token);
-    $this->pages   = $this->get_pages($token);
-    $this->nowpage = $this->get_page($this->pages, $_REQUEST['fb_page_id']);
-
-    if (empty($nowpage->access_token)) {
-      $this->forward_failed_oauth('can not get the access token of the page.');
+    $this->user  = $this->get_user_info($token);
+    if (!empty($fb_page_id)) {
+      $this->pages = $this->get_pages_info($token);
+      $this->page  = $this->get_target_page_info($this->pages, $fb_page_id);
     }
   }
 
-  protected function get_access_token($canvas, $code) {
-    $url = self::$TOKEN_URL .  '?client_id=' . $this->appid . '&redirect_uri=' . urlencode($canvas)
-             . '&client_secret=' . $this->secret . "&code=" . $code;
+  protected function get_access_token($canvas, $page, $code) {
+    $url = self::$TOKEN_URL . '?client_id=' . $this->appid
+         . '&redirect_uri=' . $this->canvas_url($canvas, $page) . '&client_secret=' . $this->secret . "&code=" . $code;
     $response = file_get_contents($url);
     $params   = null;
     parse_str($response, $params);
     $token  = $params['access_token'];
     $result = null;
     if (empty($token)) {
+/* e.g.
+      {
+        "error": {
+        "type": "OAuthException",
+          "message": "Error validating verification code."
+        }
+      }
+*/
       $result = json_decode($response);
     }
     return array($token, $result); 
   }
 
-  protected function get_pageinfo($signed_request) {
+  protected function get_page_info($signed_request) {
     $data = $this->parse_signed_request($signed_request);
     if (!empty($data)) {
-      return array($data['user_id'], $data['page']['id'], $data['page']['admin']);
+      return array($data['user'], $data['page']['id'], $data['page']['admin']);
     }
     return array();
   }
 
-  protected function get_user($token) {
+  protected function get_user_info($token) {
     $url = self::$ME_URL . '?access_token=' . $token;
     return json_decode(file_get_contents($url));
   }
 
-  protected function get_pages($token) {
+  protected function get_pages_info($token) {
     $url = self::$ME_URL . '/accounts?access_token=' . $token;
     return json_decode(file_get_contents($url));
   }
 
-  protected function get_page($pages, $pageid) {
+  protected function get_target_page_info($pages, $pageid) {
     // 該当ページのアクセストークンを探す。
     if ($pages && $pages->{'data'}) {
       foreach ($pages->{'data'} as $p) {
@@ -153,9 +180,8 @@ class FacebookApp {
     return null;
   }
 
-  protected function forward_oauth($scope, $canvas) {
-    $url = self::$OAUTH_URL . '?client_id=' . $this->appid . "&redirect_uri=" . urlencode($canvas)
-              . '&scope=' . $scope;
+  protected function forward_oauth($scope, $canvas, $page) {
+    $url = self::$OAUTH_URL . '?client_id=' . $this->appid . "&redirect_uri=" . $this->canvas_url($canvas, $page) . '&scope=' . $scope;
     echo("<script> top.location.href='" . $url . "'</script><p>wait a minutes.</p>");
     exit();
   }
