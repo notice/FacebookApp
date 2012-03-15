@@ -128,6 +128,24 @@ class FacebookApp {
     }
   }
 
+  protected function deauth_page($page) {
+    // virtual function.
+  }
+
+  protected function deauth_user($user) {
+    // virtual function.
+  }
+
+  public function deauth() {
+    $data = $this->parse_signed_request($_REQUEST['signed_request']);
+    if ($data['profile_id']) {
+      deauth_page($data['profile_id']);
+    }
+    if ($data['user']) {
+      deauth_page($data['user']);
+    }
+  }
+
   protected function get_access_token($canvas, $page, $code) {
     $url = self::$TOKEN_URL . '?client_id=' . $this->appid
          . '&redirect_uri=' . $this->canvas_url($canvas, $page) . '&client_secret=' . $this->secret . "&code=" . $code;
@@ -147,7 +165,7 @@ class FacebookApp {
 */
       $result = json_decode($response);
     }
-    return array($token, $result); 
+    return array($token, $result);
   }
 
   protected function get_page_info($signed_request) {

@@ -82,7 +82,7 @@ FacebookAppクラスのインスタンスを初期化します。
 +   `secret` :
    アプリケーションの秘訣
 
-OAUTH認証
+OAuth認証
 ----------------
 oauth($scope, $canvas)
 
@@ -95,6 +95,24 @@ OAUTH認証ダイアログを呼び出して、必要ならユーザーから認
 
 +    `canvas`
      認証後のリダイレクト先(アプリのネームスペース下:https://apps.facebook.com/app-namespace/)
+
+アンインストール
+----------------
+deauth()
+
+Facebookからsigned_requestとともに呼び出されたとき、このメソッドを実行すると、deauth_user(),deauth_page()が呼び出される。
+アプリ独自のアンインストール処理が必要なら、これらのメソッドをオーバライドする。
+
+### サンプルコード ###
+
+    <php?
+      include 'fbapp.ini';
+      include 'fbapp.php';
+
+      $app = new FacebookApp($APP_ID, $SECRET);
+      $app->deauth();
+    ?>
+
 
 ライセンス
 ----------
