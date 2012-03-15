@@ -27,10 +27,10 @@ class FacebookApp {
   private $page;   // アプリがインストールされたページ
 
   // 定数
-  private static $FB_PAGE_ID = 'fb_page_id';
-  private static $OAUTH_URL  = 'https://www.facebook.com/dialog/oauth';
-  private static $TOKEN_URL  = 'https://graph.facebook.com/oauth/access_token';
-  private static $ME_URL     = 'https://graph.facebook.com/me';
+  const FB_PAGE_ID = 'fb_page_id';
+  const OAUTH_URL  = 'https://www.facebook.com/dialog/oauth';
+  const TOKEN_URL  = 'https://graph.facebook.com/oauth/access_token';
+  const ME_URL     = 'https://graph.facebook.com/me';
 
   // getters
   public function isadmin()  { return $this->admin; }
@@ -44,7 +44,7 @@ class FacebookApp {
 
   protected static function canvas_url($canvas, $page) {
     if (!empty($page)) {
-      $canvas .= '?' . self::$FB_PAGE_ID . '=' . $page;
+      $canvas .= '?' . self::FB_PAGE_ID . '=' . $page;
     }
     return urlencode($canvas);
   }
@@ -110,7 +110,7 @@ class FacebookApp {
     }
     // request parameters.
     $code       = $_REQUEST['code'];
-    $fb_page_id = $_REQUEST[self::$FB_PAGE_ID];
+    $fb_page_id = $_REQUEST[self::FB_PAGE_ID];
 
     if (empty($code)) {
       // $codeがなければ、OAuth認証へ進める。
@@ -147,7 +147,7 @@ class FacebookApp {
   }
 
   protected function get_access_token($canvas, $page, $code) {
-    $url = self::$TOKEN_URL . '?client_id=' . $this->appid
+    $url = self::TOKEN_URL . '?client_id=' . $this->appid
          . '&redirect_uri=' . $this->canvas_url($canvas, $page) . '&client_secret=' . $this->secret . "&code=" . $code;
     $response = file_get_contents($url);
     $params   = null;
@@ -177,12 +177,12 @@ class FacebookApp {
   }
 
   protected function get_user_info($token) {
-    $url = self::$ME_URL . '?access_token=' . $token;
+    $url = self::ME_URL . '?access_token=' . $token;
     return json_decode(file_get_contents($url));
   }
 
   protected function get_pages_info($token) {
-    $url = self::$ME_URL . '/accounts?access_token=' . $token;
+    $url = self::ME_URL . '/accounts?access_token=' . $token;
     return json_decode(file_get_contents($url));
   }
 
@@ -199,7 +199,7 @@ class FacebookApp {
   }
 
   protected function forward_oauth($scope, $canvas, $page) {
-    $url = self::$OAUTH_URL . '?client_id=' . $this->appid . "&redirect_uri=" . $this->canvas_url($canvas, $page) . '&scope=' . $scope;
+    $url = self::OAUTH_URL . '?client_id=' . $this->appid . "&redirect_uri=" . $this->canvas_url($canvas, $page) . '&scope=' . $scope;
     echo("<script> top.location.href='" . $url . "'</script><p>wait a minutes.</p>");
     exit();
   }
