@@ -123,7 +123,10 @@ class FacebookApp {
     $this->user  = $this->get_user_info($token);
     if (!empty($fb_page_id)) {
       $this->pages = $this->get_pages_info($token);
-      $this->page  = $this->get_target_page_info($this->pages, $fb_page_id);
+      $page  = $this->get_target_page_info($this->pages, $fb_page_id);
+      if (!empty($page) {
+        $this->page = $this->api($page->id, $page->access_token);
+      }
     }
   }
 
