@@ -29,8 +29,7 @@ class FacebookApp {
   // 定数
   const FB_PAGE_ID = 'fb_page_id';
   const OAUTH_URL  = 'https://www.facebook.com/dialog/oauth';
-  const TOKEN_URL  = 'https://graph.facebook.com/oauth/access_token';
-  const ME_URL     = 'https://graph.facebook.com/me';
+  const GRAPH_URL  = 'https://graph.facebook.com/';
 
   // getters
   public function isadmin()  { return $this->admin; }
@@ -49,7 +48,7 @@ class FacebookApp {
     return urlencode($canvas);
   }
 
-  protected function parse_signed_request($signed_request) {
+  public function parse_signed_request($signed_request) {
     list($encoded_sig, $payload) = explode('.', $signed_request, 2);
 
     // decode the data
@@ -147,7 +146,7 @@ class FacebookApp {
   }
 
   protected function get_access_token($canvas, $page, $code) {
-    $url = self::TOKEN_URL . '?client_id=' . $this->appid
+    $url = self::GRAPH_URL . 'oauth/access_token'. '?client_id=' . $this->appid
          . '&redirect_uri=' . $this->canvas_url($canvas, $page) . '&client_secret=' . $this->secret . "&code=" . $code;
     $response = file_get_contents($url);
     $params   = null;
@@ -176,13 +175,21 @@ class FacebookApp {
     return array();
   }
 
+  public function api($url, $token = null) {
+    $url = self::GRAPH_URL . $url;
+    if (!empty($token)) {
+      $url .= '?access_token=' . $token;
+    }
+    return json_decode(file_get_contents($url));
+  }
+
   protected function get_user_info($token) {
-    $url = self::ME_URL . '?access_token=' . $token;
+    $url = self::GRAPH_URL . 'me?access_token=' . $token;
     return json_decode(file_get_contents($url));
   }
 
   protected function get_pages_info($token) {
-    $url = self::ME_URL . '/accounts?access_token=' . $token;
+    $url = self::GRAPH_URL . 'me/accounts?access_token=' . $token;
     return json_decode(file_get_contents($url));
   }
 
