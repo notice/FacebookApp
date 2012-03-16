@@ -82,19 +82,23 @@ class FacebookApp {
    echo('<html><body><p>liked.</p></body></html>');
   }
 
+  public function get_page_info() {
+      list($this->userid, $this->page, $this->admin) = $this->_get_page_info($_REQUEST['signed_request']);
+      if (empty($this->page)) {
+        $this->forward_failed_oauth('get_page_info: failed request.');
+      }
+  }
+
   public function forward() {
     if (!empty($_REQUEST['signed_request'])) {
       // facebookからのファーストコールのとき
       // このページの情報を取得する。
-      list($this->userid, $this->page, $this->admin) = $this->get_page_info($_REQUEST['signed_request']);
-      if (empty($this->page)) {
-        $this->forward_failed_oauth('get_page_info: failed request.');
+      $this->get_page_info();
+      if ($this->page['liked']) {
+        $this->forward_liked_page();
+      } else {
+        $this->forward_page();
       }
-    }
-    if ($this->page['liked']) {
-      $this->forward_liked_page();
-    } else {
-      $this->forward_page();
     }
   }
 
@@ -124,7 +128,7 @@ class FacebookApp {
     if (!empty($fb_page_id)) {
       $this->pages = $this->get_pages_info($token);
       $page  = $this->get_target_page_info($this->pages, $fb_page_id);
-      if (!empty($page) {
+      if (!empty($page)) {
         $this->page = $this->api($page->id, $page->access_token);
       }
     }
@@ -170,7 +174,7 @@ class FacebookApp {
     return array($token, $result);
   }
 
-  protected function get_page_info($signed_request) {
+  protected function _get_page_info($signed_request) {
     $data = $this->parse_signed_request($signed_request);
     if (!empty($data)) {
       return array($data['user'], $data['page']['id'], $data['page']['admin']);
