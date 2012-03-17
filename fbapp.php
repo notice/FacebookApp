@@ -18,8 +18,9 @@
 
 class FacebookApp {
   // メンバー変数
-  private $appid;  // アプリケーションID
-  private $secret; // アプリケーションンの秘訣
+  private $appid;     // アプリケーションID
+  private $secret;    // アプリケーションンの秘訣
+  private $namespace; // アプリケーションンのnamcespace
 
   private $userid; // このアプリを利用するユーザーID
   private $admin;  // 利用ユーザーが管理者かどうか(true or false)
@@ -28,6 +29,7 @@ class FacebookApp {
 
   // 定数
   const FB_PAGE_ID = 'fb_page_id';
+  const CANVAS_URL = 'https://apps.facebook.com/';
   const OAUTH_URL  = 'https://www.facebook.com/dialog/oauth';
   const GRAPH_URL  = 'https://graph.facebook.com/';
 
@@ -69,9 +71,10 @@ class FacebookApp {
     return $data;
   }
 
-  public function __construct($appid, $secret) {
-    $this->appid  = $appid;
-    $this->secret = $secret;
+  public function __construct($appid, $secret, $namespace) {
+    $this->appid     = $appid;
+    $this->secret    = $secret;
+    $this->namespace = $namespace;
   }
 
   protected function forward_page() {
@@ -111,16 +114,17 @@ class FacebookApp {
       // $_REQUEST['error_description'] = 'The user denied your request.'
       $this->forward_failed_oauth($_REQUEST['error']);
     }
+    $canvas_url = self::CANVAS_URL . $this->namespace . "/" . $canvas;
     // request parameters.
     $code       = $_REQUEST['code'];
     $fb_page_id = $_REQUEST[self::FB_PAGE_ID];
 
     if (empty($code)) {
       // $codeがなければ、OAuth認証へ進める。
-      $this->forward_oauth($scope, $canvas, $fb_page_id);
+      $this->forward_oauth($scope, $canvas_url, $fb_page_id);
     }
     // アクセストークンを取得する。
-    list($token, $result) = $this->get_access_token($canvas, $fb_page_id, $code);
+    list($token, $result) = $this->get_access_token($canvas_url, $fb_page_id, $code);
     if (empty($token)) {
       $this->forward_failed_oauth('access_token: ' . $result->error->message);
     }
