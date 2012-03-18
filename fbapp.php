@@ -218,7 +218,7 @@ class FacebookApp {
 
   protected function forward_oauth($scope, $canvas, $page) {
     $url = self::OAUTH_URL . '?client_id=' . $this->appid . "&redirect_uri=" . $this->canvas_url($canvas, $page) . '&scope=' . $scope;
-    echo("<script> top.location.href='" . $url . "'</script><p>wait a minutes.</p>");
+    echo("<script> top.location.href='" . $url . "'</script><p>wait a minute.</p>");
     exit();
   }
 
