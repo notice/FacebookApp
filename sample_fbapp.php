@@ -1,5 +1,5 @@
 <?php
-include "fbapp.php";
+require_once('fbapp.php');
 /*
   「いいね！」前と「いいね！」後のコンテンツを切り替えるアプリです。
 */

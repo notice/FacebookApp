@@ -9,8 +9,8 @@ Facebookアプリを開発するためのフレームワークです。
 
 ### サンプルコード(sample_fbapp.php) ###
     <?php
-    include "fbapp.ini";
-    include "fbapp.php";
+    require_once('fbapp.ini');
+    require_once('fbapp.php');
 
     /*
      「いいね！」前と「いいね！」後のコンテンツを切り替えるアプリです。
@@ -34,8 +34,8 @@ Facebookアプリを開発するためのフレームワークです。
 
 ### サンプルコード(sample\_oauth\_fbapp.php) ###
     <?php
-    include "fbapp.ini";
-    include "fbapp.php";
+    require_once('fbapp.ini');
+    require_once('fbapp.php');
 
     /*
       OAuth認証するアプリです。
@@ -106,8 +106,8 @@ Facebookからsigned_requestとともに呼び出されたとき、このメソ�
 ### サンプルコード ###
 
     <php?
-      include 'fbapp.ini';
-      include 'fbapp.php';
+      require_once('fbapp.ini');
+      require_once('fbapp.php');
 
       $app = new FacebookApp($APP_ID, $SECRET);
       $app->deauth();
